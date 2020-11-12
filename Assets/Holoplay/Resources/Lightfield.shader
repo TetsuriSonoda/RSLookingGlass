@@ -1,4 +1,4 @@
-﻿//Copyright 2017-2019 Looking Glass Factory Inc.
+﻿//Copyright 2017-2020 Looking Glass Factory Inc.
 //All rights reserved.
 //Unauthorized copying or distribution of this file, and the source code contained herein, is strictly prohibited.
 
@@ -37,7 +37,6 @@ Shader "Holoplay/Lightfield" {
 			float4 tile;
 			float4 viewPortion;
 			float4 aspect;
-			float fringe;
 			float verticalOffset; // just a dumb fix for macos in 2019.3
 			
 			// pass thru vert shader
@@ -80,29 +79,31 @@ Shader "Holoplay/Lightfield" {
 					viewLerp += i.uv.y * slope;
 					viewLerp *= pitch;
 					viewLerp -= center;
+					viewLerp += 0.5 / tile.z;
 					// make sure it's positive and between 0-1
 					viewLerp = 1.0 - fmod(viewLerp + ceil(abs(viewLerp)), 1.0);
-					// translate to quilt coordinates
-					float view = floor(viewLerp * tile.z); // multiply by total views
-					float2 quiltCoords = float2(
-						(fmod(view, tile.x) + viewUV.x) / tile.x,
-						(floor(view / tile.x) + viewUV.y) / tile.y
-					);
-					quiltCoords *= viewPortion.xy;
-					col[subpixel] = tex2D(_MainTex, quiltCoords)[subpixel];
-				}
+					viewLerp = clamp(viewLerp, 0.00001, 0.99999);	// another dumb bugfix
+					// col[subpixel] = viewLerp;
 
-				// fringe
-				// if fringe is negative, that means it's the odd pixels
-				// this is so we don't have to store a separate bool for odd or even
-				// so that's why we're adding ceil fringe
-				// if it's positive it's like we're adding 1
-				// so pixel 2 will become pixel 3 and 3 % 2 == 1
-				// and so our fringe amount will be multiplied by 1 instead of 0,
-				// so for a fringe of 0.2 would make the fringe amount 1 -> 0.8
-				float yPixel = i.uv.y * _ScreenParams.y + ceil(fringe * 0.5);
-				float fringeAmt = 1.0 - abs(fringe) * floor(fmod(yPixel, 2.0));
-				col *= fringeAmt;
+					// translate to quilt coordinates
+					float view1 = floor(viewLerp * tile.z); // multiply by total views
+					view1 = view1 == tile.z ? 0.0 : view1;
+					float view2 = view1 + 1;
+					view2 = view2 == tile.z ? 0.0 : view2;
+					float viewFilter = viewLerp * tile.z - view1;
+					float tx = tile.x - 0.00001;	// just an incredibly dumb bugfix
+					float2 quiltCoords1 = float2(
+						(fmod(view1, tx) + viewUV.x) / tx,
+						(floor(view1 / tx) + viewUV.y) / tile.y
+					) * viewPortion.xy;
+					float2 quiltCoords2 = float2(
+						(fmod(view2, tx) + viewUV.x) / tx,
+						(floor(view2 / tx) + viewUV.y) / tile.y
+					) * viewPortion.xy;
+					float col1 = tex2D(_MainTex, quiltCoords1)[subpixel];
+					float col2 = tex2D(_MainTex, quiltCoords2)[subpixel];
+					col[subpixel] = lerp(col1, col2, viewFilter);
+				}
 
 				return col;
 			}

@@ -780,7 +780,7 @@ namespace LookingGlass {
 			customQuiltSettings.Setup(); // even if not custom quilt, just set this up anyway
 			if (quiltRT != null) DestroyImmediate(quiltRT);
 			quiltRT = new RenderTexture(quiltSettings.quiltWidth, quiltSettings.quiltHeight, 0) {
-				filterMode = FilterMode.Point, hideFlags = HideFlags.DontSave };
+				filterMode = FilterMode.Bilinear, hideFlags = HideFlags.DontSave };
 			quiltRT.enableRandomWrite = true;
 			quiltRT.Create();
 			PassSettingsToMaterial(lightfieldMat);

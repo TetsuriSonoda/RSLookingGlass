@@ -52,7 +52,7 @@
 			{
 				g2f o;
 				float4 v = i[0].vertex;
-				v.y = -v.y;
+				//v.y = -v.y;
 
 				// TODO: interpolate uvs on quad
 				float2 uv = i[0].uv;
@@ -117,4 +117,5 @@
 			ENDCG
 		}
 	}
+	//Fallback "VertexLit"
 }
