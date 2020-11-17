@@ -94,7 +94,6 @@
 				#endif
 				o.uv = uv;
 				triStream.Append(o);
-
 			}
 
 			v2f vert (appdata v)
@@ -116,5 +115,93 @@
 			}
 			ENDCG
 		}
+
+		// Pass to render object as a shadow caster
+		Pass
+		{
+			Name "CastShadow"
+			Tags { "LightMode" = "ShadowCaster" }
+
+			CGPROGRAM
+			#pragma vertex svert
+			#pragma geometry sgeom
+			#pragma fragment sfrag
+			#pragma multi_compile_shadowcaster
+			#include "UnityCG.cginc"
+
+			float _PointSize;
+
+			struct v2fs
+			{
+				float4 vertex : SV_POSITION;
+			};
+
+			struct g2fs
+			{
+				float4 vertex : SV_POSITION;
+			};
+
+			[maxvertexcount(4)]
+			void sgeom(point v2fs i[1], inout TriangleStream<g2fs> triStream)
+			{
+				g2fs o;
+				float4 v = i[0].vertex;
+				v.y = -v.y;
+
+				// TODO: interpolate uvs on quad
+				float2 p = _PointSize * 0.001;
+				p.y *= _ScreenParams.x / _ScreenParams.y;
+
+				o.vertex = UnityObjectToClipPos(v);
+	#ifdef USE_DISTANCE
+				o.vertex += float4(-p.x, p.y, 0, 0);
+	#else
+				o.vertex += float4(-p.x, p.y, 0, 0) * o.vertex.w;
+	#endif
+				triStream.Append(o);
+
+				o.vertex = UnityObjectToClipPos(v);
+	#ifdef USE_DISTANCE
+				o.vertex += float4(-p.x, -p.y, 0, 0);
+	#else
+				o.vertex += float4(-p.x, -p.y, 0, 0) * o.vertex.w;
+	#endif
+				triStream.Append(o);
+
+				o.vertex = UnityObjectToClipPos(v);
+	#ifdef USE_DISTANCE
+				o.vertex += float4(p.x, p.y, 0, 0);
+	#else
+				o.vertex += float4(p.x, p.y, 0, 0) * o.vertex.w;
+	#endif
+				triStream.Append(o);
+
+				o.vertex = UnityObjectToClipPos(v);
+	#ifdef USE_DISTANCE
+				o.vertex += float4(p.x, -p.y, 0, 0);
+	#else
+				o.vertex += float4(p.x, -p.y, 0, 0) * o.vertex.w;
+	#endif
+				triStream.Append(o);
+			}
+
+			v2fs svert(appdata_base v)
+			{
+				v2fs o;
+
+				o.vertex = v.vertex;
+//				o.vertex = UnityApplyLinearShadowBias(o.vertex);
+
+				return o;
+			}
+
+			float4 sfrag(v2fs i) : COLOR
+			{
+				SHADOW_CASTER_FRAGMENT(i)
+			}
+			ENDCG
+		}
 	}
+
+	Fallback "VertexLit"
 }
