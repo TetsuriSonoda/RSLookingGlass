@@ -203,5 +203,5 @@
 		}
 	}
 
-	Fallback "VertexLit"
+//	Fallback "VertexLit"
 }
