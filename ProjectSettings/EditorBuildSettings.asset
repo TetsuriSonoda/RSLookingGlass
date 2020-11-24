@@ -6,6 +6,6 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/RSLG.unity
+    path: Assets/App/RSLG.unity
     guid: f994edf7b75a1a84da211b838f938889
   m_configObjects: {}

@@ -1,6 +1,4 @@
-﻿// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
-
-Shader "Custom/DepthPolygonDrawer"
+﻿Shader "Custom/DepthPolygonDrawer"
 {
 	Properties
 	{
@@ -19,19 +17,19 @@ Shader "Custom/DepthPolygonDrawer"
 		_OffsetZ("Offset Z", Range(-10, 10)) = 0
 		_MedianSize("MedianSize", Range(0, 1)) = 0.001
 	}
+
 	SubShader
 	{
-		Tags { "RenderType"="Transparent" }
+		Tags { "RenderType" = "Transparent" }
 		Blend SrcAlpha OneMinusSrcAlpha
 
 		Pass
 		{
 			CGPROGRAM
-//			#pragma target 5.0
 			#pragma vertex vert
 			#pragma fragment frag
 			#pragma geometry geom
-			
+
 			struct appdata
 			{
 				float4 vertex : POSITION;
@@ -66,14 +64,15 @@ Shader "Custom/DepthPolygonDrawer"
 			float _OffsetZ;
 			int _PolygonQuality;
 
-			float SampleDepth(float2 in_xy, float window_size)
+			float SampleDepth(float2 in_xy)
 			{
 				return tex2Dlod(_DepthTex, float4(float2(in_xy.x, in_xy.y), 0, 0)).r * 0xffff * _ScaleBias;
-//				float d0 = tex2Dlod(_DepthTex, float4(float2(in_xy.x - window_size, in_xy.y), 0, 0)).r * 0xffff * _ScaleBias;
-//				float d1 = tex2Dlod(_DepthTex, float4(float2(in_xy.x, in_xy.y), 0, 0)).r * 0xffff * _ScaleBias;
-//				float d2 = tex2Dlod(_DepthTex, float4(float2(in_xy.x + window_size, in_xy.y), 0, 0)).r * 0xffff * _ScaleBias;
+//				Median filter is disabled for now
+/*				float d0 = tex2Dlod(_DepthTex, float4(float2(in_xy.x - window_size, in_xy.y), 0, 0)).r * 0xffff * _ScaleBias;
+				float d1 = tex2Dlod(_DepthTex, float4(float2(in_xy.x, in_xy.y), 0, 0)).r * 0xffff * _ScaleBias;
+				float d2 = tex2Dlod(_DepthTex, float4(float2(in_xy.x + window_size, in_xy.y), 0, 0)).r * 0xffff * _ScaleBias;
 
-/*				int num = (d0 > 0) + (d1 > 0) + (d2 > 0);
+				int num = (d0 > 0) + (d1 > 0) + (d2 > 0);
 				if (num == 0) return 0;
 				else return (d0 + d1 + d2) / num;
 
@@ -89,19 +88,21 @@ Shader "Custom/DepthPolygonDrawer"
 				{
 					return d0;
 				}
-*/			};
+*/
+			};
 
-			v2g vert (appdata v)
+			v2g vert(appdata v)
 			{
 				v2g o;
-				float d = SampleDepth(v.uv.xy, _MedianSize);
+				float d = SampleDepth(v.uv.xy);
 
+				// Convert Depth to 3D point
+				// UnityObjectToClipPos is applied in geometory shader
 				o.vertex.z = d;
 				o.vertex.x = d * (_PPX - v.uv.x) / _FX;
 				o.vertex.y = d * (_PPY - v.uv.y) / _FY;
 				o.vertex.w = 1.0f;
 
-				//o.vertex = v.vertex; // UnityObjectToClipPos(o.vertex);
 				o.uv = v.uv;
 				return o;
 			}
@@ -121,10 +122,10 @@ Shader "Custom/DepthPolygonDrawer"
 				uv[2] = float2(i[0].uv.x + _WindowX, i[0].uv.y - _WindowY);	// left up
 				uv[3] = float2(i[0].uv.x + _WindowX, i[0].uv.y + _WindowY);	// left down
 
-				d[0] = SampleDepth(uv[0], _MedianSize);	// right up
-				d[1] = SampleDepth(uv[1], _MedianSize);	// right down
-				d[2] = SampleDepth(uv[2], _MedianSize);	// left up
-				d[3] = SampleDepth(uv[3], _MedianSize);	// left down
+				d[0] = SampleDepth(uv[0]);	// right up
+				d[1] = SampleDepth(uv[1]);	// right down
+				d[2] = SampleDepth(uv[2]);	// left up
+				d[3] = SampleDepth(uv[3]);	// left down
 
 				// II. Boundary scoring
 				int point_score = 0;
@@ -134,24 +135,26 @@ Shader "Custom/DepthPolygonDrawer"
 					if (abs(d[j] - i[0].vertex.z) < _DiffThreshold * i[0].vertex.z && d[j] > 0)
 					{
 						out_pos[j] = float4 (d[j] * (_PPX - uv[j].x) / _FX,
-											 d[j] * (_PPY - uv[j].y) / _FY,
-											 d[j],
-											 1.0);
+												d[j] * (_PPY - uv[j].y) / _FY,
+												d[j],
+												1.0);
 						point_score++;
 					}
 					else
 					{
 						out_pos[j] = float4 (i[0].vertex.z * (_PPX - uv[j].x) / _FX,
-											 i[0].vertex.z * (_PPY - uv[j].y) / _FY,
-											 i[0].vertex.z,
-											 1.0);
+												i[0].vertex.z * (_PPY - uv[j].y) / _FY,
+												i[0].vertex.z,
+												1.0);
 					}
 				}
 
+				// III. Score evaluation
 				if (point_score >= _PolygonQuality)
 				{
 					g2f out_v;
 
+					// IV. Put result
 					for (int j = 0; j < 4; j++)
 					{
 						// tex1.x is used for depth threshold flag
@@ -164,13 +167,16 @@ Shader "Custom/DepthPolygonDrawer"
 				}
 			}
 
-			fixed4 frag (g2f i) : COLOR
+			fixed4 frag(g2f i) : COLOR
 			{
 				// sample the texture
 				fixed4 col = tex2D(_SpriteTex, i.uv);
-				if (col.a == 0.0f || (col.g == 1.0 && col.r == 0.0 && col.b == 0.0)) discard;
-				fixed4 ret_col = fixed4(col.r, col.g, col.b, col.a);
 
+				// depth diff evaluation between polygon center and each depth pixel
+				float depth = tex2D(_DepthTex, i.uv).r * 0xffff * _ScaleBias;
+				if (abs(depth - i.uv2.y) > _DiffThreshold) discard;
+
+				fixed4 ret_col = fixed4(col.r, col.g, col.b, col.a);
 				return ret_col;
 			}
 			ENDCG

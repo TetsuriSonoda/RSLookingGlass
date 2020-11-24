@@ -1,6 +1,4 @@
-﻿// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
-
-Shader "Custom/DepthPolygonShadowDrawer"
+﻿Shader "Custom/DepthPolygonShadowDrawer"
 {
 	Properties
 	{
@@ -15,6 +13,7 @@ Shader "Custom/DepthPolygonShadowDrawer"
 
 		_DiffThreshold("DiffThreshold", Range(0, 10)) = 0.2
 		_PolygonQuality("PolygonQuality", Int) = 1
+		_ShadowPolygonQuality("ShadowPolygonQuality", Int) = 1
 		_ScaleBias("ScaleBias", Range(0, 1000)) = 0.001
 		_OffsetZ("Offset Z", Range(-10, 10)) = 0
 		_MedianSize("MedianSize", Range(0, 1)) = 0.001
@@ -66,44 +65,24 @@ Shader "Custom/DepthPolygonShadowDrawer"
 			float _OffsetZ;
 			int _PolygonQuality;
 
-			float SampleDepth(float2 in_xy, float window_size)
+			float SampleDepth(float2 in_xy)
 			{
 				return tex2Dlod(_DepthTex, float4(float2(in_xy.x, in_xy.y), 0, 0)).r * 0xffff * _ScaleBias;
-
-//				float d0 = tex2Dlod(_DepthTex, float4(float2(in_xy.x - window_size, in_xy.y), 0, 0)).r * 0xffff * _ScaleBias;
-//				float d1 = tex2Dlod(_DepthTex, float4(float2(in_xy.x, in_xy.y), 0, 0)).r * 0xffff * _ScaleBias;
-//				float d2 = tex2Dlod(_DepthTex, float4(float2(in_xy.x + window_size, in_xy.y), 0, 0)).r * 0xffff * _ScaleBias;
-/*
-				int num = (d0 > 0) + (d1 > 0) + (d2 > 0);
-				if (num == 0) return 0;
-				else return (d0 + d1 + d2) / num;
-
-				if (d2 > d0 && d2 < d1)
-				{
-					return d2;
-				}
-				else if (d1 > d0 && d1 < d2)
-				{
-					return d1;
-				}
-				else
-				{
-					return d0;
-				}
-*/
+//				Median filter is disabled for now
 			};
 
 			v2g vert(appdata v)
 			{
 				v2g o;
-				float d = SampleDepth(v.uv.xy, _MedianSize);
+				float d = SampleDepth(v.uv.xy);
 
+				// Convert Depth to 3D point
+				// UnityObjectToClipPos is applied in geometory shader
 				o.vertex.z = d;
 				o.vertex.x = d * (_PPX - v.uv.x) / _FX;
 				o.vertex.y = d * (_PPY - v.uv.y) / _FY;
 				o.vertex.w = 1.0f;
 
-				//o.vertex = v.vertex; // UnityObjectToClipPos(o.vertex);
 				o.uv = v.uv;
 				return o;
 			}
@@ -123,10 +102,10 @@ Shader "Custom/DepthPolygonShadowDrawer"
 				uv[2] = float2(i[0].uv.x + _WindowX, i[0].uv.y - _WindowY);	// left up
 				uv[3] = float2(i[0].uv.x + _WindowX, i[0].uv.y + _WindowY);	// left down
 
-				d[0] = SampleDepth(uv[0], _MedianSize);	// right up
-				d[1] = SampleDepth(uv[1], _MedianSize);	// right down
-				d[2] = SampleDepth(uv[2], _MedianSize);	// left up
-				d[3] = SampleDepth(uv[3], _MedianSize);	// left down
+				d[0] = SampleDepth(uv[0]);	// right up
+				d[1] = SampleDepth(uv[1]);	// right down
+				d[2] = SampleDepth(uv[2]);	// left up
+				d[3] = SampleDepth(uv[3]);	// left down
 
 				// II. Boundary scoring
 				int point_score = 0;
@@ -150,10 +129,12 @@ Shader "Custom/DepthPolygonShadowDrawer"
 					}
 				}
 
+				// III. Score evaluation
 				if (point_score >= _PolygonQuality)
 				{
 					g2f out_v;
 
+					// IV. Put result
 					for (int j = 0; j < 4; j++)
 					{
 						// tex1.x is used for depth threshold flag
@@ -170,9 +151,12 @@ Shader "Custom/DepthPolygonShadowDrawer"
 			{
 				// sample the texture
 				fixed4 col = tex2D(_SpriteTex, i.uv);
-				if (col.a == 0.0f || (col.g == 1.0 && col.r == 0.0 && col.b == 0.0)) discard;
-				fixed4 ret_col = fixed4(col.r, col.g, col.b, col.a);
 
+				// depth diff evaluation between polygon center and each depth pixel
+				float depth = tex2D(_DepthTex, i.uv).r * 0xffff * _ScaleBias;
+				if (abs(depth - i.uv2.y) > _DiffThreshold) discard;
+
+				fixed4 ret_col = fixed4(col.r, col.g, col.b, col.a);
 				return ret_col;
 			}
 			ENDCG
@@ -182,7 +166,7 @@ Shader "Custom/DepthPolygonShadowDrawer"
 		Pass
 		{
 			Name "CastShadow"
-			Tags { "LightMode" = "ShadowCaster" }
+			Tags { "Queue" = "Transparent"  "LightMode" = "ShadowCaster" }
 
 			CGPROGRAM
 			#pragma vertex svert
@@ -221,12 +205,28 @@ Shader "Custom/DepthPolygonShadowDrawer"
 			float _ScaleBias;
 			float _MedianSize;
 			float _OffsetZ;
-			int _PolygonQuality;
+			int _ShadowPolygonQuality;
 
-			float SampleDepth(float2 in_xy, float window_size)
+			float SampleDepth(float2 in_xy)
 			{
 				return tex2Dlod(_DepthTex, float4(float2(in_xy.x, in_xy.y), 0, 0)).r * 0xffff * _ScaleBias;
 			};
+
+			v2fs svert(appdata v)
+			{
+				v2fs o;
+				float d = SampleDepth(v.uv.xy);
+
+				// Convert Depth to 3D point
+				// UnityObjectToClipPos is applied in geometory shader
+				o.vertex.z = d;
+				o.vertex.x = d * (_PPX - v.uv.x) / _FX;
+				o.vertex.y = d * (_PPY - v.uv.y) / _FY;
+				o.vertex.w = 1.0f;
+				o.uv = v.uv;
+
+				return o;
+			}
 
 			[maxvertexcount(4)]
 			void sgeom(point v2fs i[1], inout TriangleStream<g2fs> o)
@@ -243,10 +243,10 @@ Shader "Custom/DepthPolygonShadowDrawer"
 				uv[2] = float2(i[0].uv.x + _WindowX, i[0].uv.y - _WindowY);	// left up
 				uv[3] = float2(i[0].uv.x + _WindowX, i[0].uv.y + _WindowY);	// left down
 
-				d[0] = SampleDepth(uv[0], _MedianSize);	// right up
-				d[1] = SampleDepth(uv[1], _MedianSize);	// right down
-				d[2] = SampleDepth(uv[2], _MedianSize);	// left up
-				d[3] = SampleDepth(uv[3], _MedianSize);	// left down
+				d[0] = SampleDepth(uv[0]);	// right up
+				d[1] = SampleDepth(uv[1]);	// right down
+				d[2] = SampleDepth(uv[2]);	// left up
+				d[3] = SampleDepth(uv[3]);	// left down
 
 				// II. Boundary scoring
 				int point_score = 0;
@@ -270,10 +270,12 @@ Shader "Custom/DepthPolygonShadowDrawer"
 					}
 				}
 
-				if (point_score >= _PolygonQuality)
+				// III. Score evaluation
+				if (point_score >= _ShadowPolygonQuality)
 				{
 					g2fs out_v;
 
+					// IV. Put result
 					for (int j = 0; j < 4; j++)
 					{
 						// tex1.x is used for depth threshold flag
@@ -282,20 +284,6 @@ Shader "Custom/DepthPolygonShadowDrawer"
 						o.Append(out_v);
 					}
 				}
-			}
-
-			v2fs svert(appdata v)
-			{
-				v2fs o;
-				float d = SampleDepth(v.uv.xy, _MedianSize);
-
-				o.vertex.z = d;
-				o.vertex.x = d * (_PPX - v.uv.x) / _FX;
-				o.vertex.y = d * (_PPY - v.uv.y) / _FY;
-				o.vertex.w = 1.0f;
-				o.uv = v.uv;
-
-				return o;
 			}
 
 			float4 sfrag(v2fs i) : COLOR

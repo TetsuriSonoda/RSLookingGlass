@@ -1,5 +1,19 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-6334264030491031096
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 18bce048bd313fc40b6eb0a08d7f83ab, type: 3}
+  m_Name: RsDisparityTransform
+  m_EditorClassIdentifier: 
+  enabled: 1
+  Mode: 0
 --- !u!114 &-3995301005169620667
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14,6 +28,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enabled: 1
   _alignTo: 2
+--- !u!114 &-3161390026445656812
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 18bce048bd313fc40b6eb0a08d7f83ab, type: 3}
+  m_Name: RsDisparityTransform
+  m_EditorClassIdentifier: 
+  enabled: 1
+  Mode: 1
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -29,6 +57,26 @@ MonoBehaviour:
   _processingBlocks:
   - {fileID: 6606719639705824709}
   - {fileID: -3995301005169620667}
+  - {fileID: -3161390026445656812}
+  - {fileID: 6229653819392826159}
+  - {fileID: -6334264030491031096}
+--- !u!114 &6229653819392826159
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 48f1a4dc738fa514aa5e5d4cc3665aae, type: 3}
+  m_Name: RsSpatialFilter
+  m_EditorClassIdentifier: 
+  enabled: 1
+  _filterMagnitude: 2
+  _filterSmoothAlpha: 0.5
+  _filterSmoothDelta: 20
+  _holeFillingMode: 0
 --- !u!114 &6606719639705824709
 MonoBehaviour:
   m_ObjectHideFlags: 0
