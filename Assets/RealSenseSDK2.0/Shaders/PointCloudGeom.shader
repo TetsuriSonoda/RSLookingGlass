@@ -117,5 +117,5 @@
 			ENDCG
 		}
 	}
-	//Fallback "VertexLit"
+	Fallback "VertexLit"
 }

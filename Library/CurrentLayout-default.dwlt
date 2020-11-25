@@ -111,8 +111,8 @@ MonoBehaviour:
     y: 30
     width: 1920
     height: 947
-  m_MinSize: {x: 678, y: 492}
-  m_MaxSize: {x: 12003, y: 14042}
+  m_MinSize: {x: 679, y: 492}
+  m_MaxSize: {x: 12004, y: 14042}
   vertical: 0
   controlID: 35
 --- !u!114 &6
@@ -136,8 +136,8 @@ MonoBehaviour:
     y: 0
     width: 1920
     height: 947
-  m_MinSize: {x: 678, y: 492}
-  m_MaxSize: {x: 12003, y: 14042}
+  m_MinSize: {x: 679, y: 492}
+  m_MaxSize: {x: 12004, y: 14042}
   vertical: 1
   controlID: 36
 --- !u!114 &7
@@ -162,8 +162,8 @@ MonoBehaviour:
     y: 0
     width: 1920
     height: 671
-  m_MinSize: {x: 678, y: 221}
-  m_MaxSize: {x: 12003, y: 4021}
+  m_MinSize: {x: 679, y: 221}
+  m_MaxSize: {x: 12004, y: 4021}
   vertical: 0
   controlID: 37
 --- !u!114 &8
@@ -239,8 +239,8 @@ MonoBehaviour:
     y: 0
     width: 577
     height: 671
-  m_MinSize: {x: 275, y: 100}
-  m_MaxSize: {x: 4000, y: 4000}
+  m_MinSize: {x: 276, y: 121}
+  m_MaxSize: {x: 4001, y: 4021}
   m_ActualView: {fileID: 16}
   m_Panes:
   - {fileID: 16}
@@ -346,7 +346,7 @@ MonoBehaviour:
       y: 21
       width: 934
       height: 629
-    m_Scale: {x: 0.3071289, y: 0.3071289}
+    m_Scale: {x: 0.36484376, y: 0.36484376}
     m_Translation: {x: 467, y: 314.5}
     m_MarginLeft: 0
     m_MarginRight: 0
@@ -354,12 +354,12 @@ MonoBehaviour:
     m_MarginBottom: 0
     m_LastShownAreaInsideMargins:
       serializedVersion: 2
-      x: -1520.5342
-      y: -1024
-      width: 3041.0684
-      height: 2048
+      x: -1280
+      y: -862.0128
+      width: 2560
+      height: 1724.0256
     m_MinimalGUI: 1
-  m_defaultScale: 0.3071289
+  m_defaultScale: 0.36484376
   m_LastWindowPixelSize: {x: 934, y: 650}
   m_ClearInEditMode: 1
   m_NoCameraWarning: 1
@@ -397,7 +397,7 @@ MonoBehaviour:
       scrollPos: {x: 0, y: 0}
       m_SelectedIDs: 
       m_LastClickedID: 0
-      m_ExpandedIDs: 0cfbffff3afbffff3efbffff
+      m_ExpandedIDs: 9af8ffff
       m_RenameOverlay:
         m_UserAcceptedRename: 0
         m_Name: 
@@ -571,7 +571,7 @@ MonoBehaviour:
   m_Rotation:
     m_Target: {x: 0.04646538, y: 0.027565287, z: -0.0012827297, w: 0.99854016}
     speed: 2
-    m_Value: {x: 0.04646531, y: 0.027565248, z: -0.0012827278, w: 0.99853873}
+    m_Value: {x: -0.04646538, y: -0.027565287, z: 0.0012827297, w: -0.99854016}
   m_Size:
     m_Target: 2.710887
     speed: 2
@@ -691,7 +691,7 @@ MonoBehaviour:
     height: 255
   m_ViewDataDictionary: {fileID: 0}
   m_SearchFilter:
-    m_NameFilter: pointcloud
+    m_NameFilter: 
     m_ClassNames: []
     m_AssetLabels: []
     m_AssetBundleNames: []
@@ -707,14 +707,14 @@ MonoBehaviour:
   m_StartGridSize: 64
   m_LastFolders: []
   m_LastFoldersGridSize: -1
-  m_LastProjectPath: C:\Users\Alex\Documents\GitHub\RSLookingGlass
+  m_LastProjectPath: C:\Github\RSLookingGlass
   m_LockTracker:
     m_IsLocked: 0
   m_FolderTreeState:
     scrollPos: {x: 0, y: 0}
     m_SelectedIDs: 46350000
     m_LastClickedID: 13638
-    m_ExpandedIDs: 0000000014370000
+    m_ExpandedIDs: 00000000784100007a4100007c4100007e410000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -742,7 +742,7 @@ MonoBehaviour:
     scrollPos: {x: 0, y: 314}
     m_SelectedIDs: 
     m_LastClickedID: 0
-    m_ExpandedIDs: ffffffff0000000014370000303700007438000054390000
+    m_ExpandedIDs: ffffffff00000000784100007a4100007c4100007e410000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
